@@ -20,17 +20,17 @@ interface ChatHistory {
 async function chatWithGemini(prompt: string): Promise<string> {
   try {
     const response = await fetch(GEMINI_API_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         contents: [
           {
-            parts: [{ text: prompt }]
-          }
-        ]
-      })
+            parts: [{ text: prompt }],
+          },
+        ],
+      }),
     });
 
     if (!response.ok) {
@@ -45,15 +45,25 @@ async function chatWithGemini(prompt: string): Promise<string> {
   }
 }
 
+// Ensure the chats directory exists
+async function ensureChatsDirectory() {
+  try {
+    await Deno.mkdir("chats", { recursive: true });
+  } catch (error) {
+    console.error("Error creating chats directory:", error);
+  }
+}
+
 // Function to save chat history to a JSON file
 async function saveChatHistory(history: ChatHistory): Promise<void> {
-  const fileName = `chat_history_${history.title}.json`;
+  await ensureChatsDirectory(); // Ensure the directory exists
+  const fileName = `chats/chat_history_${history.title}.json`;
   await Deno.writeTextFile(fileName, JSON.stringify(history, null, 2));
 }
 
 // Function to load chat history from a JSON file
 async function loadChatHistory(title: string): Promise<ChatHistory | null> {
-  const fileName = `chat_history_${title}.json`;
+  const fileName = `chats/chat_history_${title}.json`;
   try {
     const fileContent = await Deno.readTextFile(fileName);
     return JSON.parse(fileContent) as ChatHistory;
@@ -65,8 +75,9 @@ async function loadChatHistory(title: string): Promise<ChatHistory | null> {
 
 // Function to list all chat history files
 async function listChatHistories(): Promise<string[]> {
+  await ensureChatsDirectory(); // Ensure the directory exists
   const histories: string[] = [];
-  for await (const entry of Deno.readDir(".")) {
+  for await (const entry of Deno.readDir("chats")) {
     if (
       entry.name.startsWith("chat_history_") &&
       entry.name.endsWith(".json")
@@ -80,7 +91,6 @@ async function listChatHistories(): Promise<string[]> {
   return histories;
 }
 
-// Main CLI setup
 const cli = new Command()
   .name("ai-cli")
   .version("1.0.0")
@@ -137,7 +147,7 @@ const cli = new Command()
       }
 
       const response = await chatWithGemini(userInput);
-      console.log(`Gemini: ${response}`);
+      console.log(`AI-CLI: ${response}`);
 
       // Add the chat pair to the history
       chatHistory.chats.push({ user: userInput, gemini: response });
