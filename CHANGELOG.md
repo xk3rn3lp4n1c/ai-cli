@@ -1,4 +1,14 @@
 # Changelog
+## [1.0.10] - 2025-01-19
+
+### Added
+
+- Added a version sync.
+
+### Fixed
+
+- Fixed bugs and added new bugs.
+
 
 ## [1.0.0] - 2025-19-01
 

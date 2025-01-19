@@ -1,61 +1,93 @@
-// bump.ts
-import { readTextFile, writeTextFile } from "https://deno.land/std/fs/mod.ts";
+// File paths
+const projectFile = "project.json";
+const constantsFile = "app/constants.ts";
+const changelogFile = "CHANGELOG.md";
 
-const constantsFilePath = "app/constants.ts";
+// Helper function to prompt the user for input
+async function promptInput(message: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
 
-async function bumpVersion(type: "patch" | "minor" | "major") {
-  // Read the constants.ts file
-  const constantsFile = await readTextFile(constantsFilePath);
+  await Deno.stdout.write(encoder.encode(`${message}: `));
+  const buf = new Uint8Array(1024);
+  const n = <number>await Deno.stdin.read(buf);
 
-  // Extract the current version
-  const versionMatch = constantsFile.match(
-    /export const APP_VERSION = "(\d+\.\d+\.\d+)"/
-  );
-  if (!versionMatch) {
-    throw new Error("APP_VERSION not found in constants.ts");
-  }
-
-  const currentVersion = versionMatch[1];
-  const [major, minor, patch] = currentVersion.split(".").map(Number);
-
-  // Increment the version
-  let newVersion: string;
-  switch (type) {
-    case "patch":
-      newVersion = `${major}.${minor}.${patch + 1}`;
-      break;
-    case "minor":
-      newVersion = `${major}.${minor + 1}.0`;
-      break;
-    case "major":
-      newVersion = `${major + 1}.0.0`;
-      break;
-    default:
-      throw new Error(
-        "Invalid version type. Use 'patch', 'minor', or 'major'."
-      );
-  }
-
-  // Replace the old version with the new version
-  const updatedFile = constantsFile.replace(
-    /export const APP_VERSION = "\d+\.\d+\.\d+"/,
-    `export const APP_VERSION = "${newVersion}"`
-  );
-
-  // Write the updated file
-  await writeTextFile(constantsFilePath, updatedFile);
-
-  console.log(`Version bumped from ${currentVersion} to ${newVersion}`);
+  return decoder.decode(buf.subarray(0, n)).trim();
 }
 
-// Get the bump type from command-line arguments
-const type = Deno.args[0];
-if (!["patch", "minor", "major"].includes(type)) {
-  console.error(
-    "Usage: deno run --allow-read --allow-write bump.ts <patch|minor|major>"
-  );
-  Deno.exit(1);
+// Helper function to read a file and handle errors
+async function readFile(filePath: string): Promise<string> {
+  try {
+    return await Deno.readTextFile(filePath);
+  } catch (error) {
+    console.error(`Error reading file ${filePath}:`, error);
+    Deno.exit(1);
+  }
 }
 
-// Bump the version
-bumpVersion(type as "patch" | "minor" | "major");
+// Helper function to write a file and handle errors
+async function writeFile(filePath: string, content: string): Promise<void> {
+  try {
+    await Deno.writeTextFile(filePath, content);
+  } catch (error) {
+    console.error(`Error writing to file ${filePath}:`, error);
+    Deno.exit(1);
+  }
+}
+
+// Step 1: Read version from project.json
+const projectContent = await readFile(projectFile);
+const { version } = JSON.parse(projectContent);
+
+// Step 2: Update APP_VERSION in constants.ts
+const constantsContent = await readFile(constantsFile);
+const updatedConstants = constantsContent.replace(
+  /export const APP_VERSION = ".*?";/,
+  `export const APP_VERSION = "${version}";`
+);
+await writeFile(constantsFile, updatedConstants);
+
+// Step 3: Prompt for changelog details
+console.log(`Preparing changelog entry for version ${version}...`);
+const addedDetails = await promptInput(
+  "Enter details of new features (comma-separated)"
+);
+const fixedDetails = await promptInput(
+  "Enter details of fixes (comma-separated)"
+);
+
+// Format the changelog entry
+const currentDate = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+const addedList = addedDetails
+  .split(",")
+  .map((item) => `- ${item.trim()}`)
+  .join("\n");
+const fixedList = fixedDetails
+  .split(",")
+  .map((item) => `- ${item.trim()}`)
+  .join("\n");
+
+const newChangelogEntry = `
+## [${version}] - ${currentDate}
+
+### Added
+
+${addedList || "- No new features listed."}
+
+### Fixed
+
+${fixedList || "- No fixes listed."}
+`;
+
+// Step 4: Append the new changelog entry
+const changelogContent = await readFile(changelogFile);
+const updatedChangelog = changelogContent.replace(
+  /# Changelog/,
+  `# Changelog\n${newChangelogEntry.trim()}\n`
+);
+await writeFile(changelogFile, updatedChangelog);
+
+// Final message
+console.log(
+  `Version ${version} synchronized in ${constantsFile} and added to ${changelogFile}.`
+);
