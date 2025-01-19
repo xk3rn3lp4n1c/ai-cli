@@ -19,16 +19,16 @@ const changelogContent = await Deno.readTextFile(changelogFile);
 const currentDate = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
 
 const newChangelogEntry = `
-## [${version}] - ${currentDate}
+  ## [${version}] - ${currentDate}
 
-### Added
+  ### Added
 
-- Describe the new features added here.
+  - Describe the new features added here.
 
-### Fixed
+  ### Fixed
 
-- List any bug fixes or improvements here.
-`;
+  - List any bug fixes or improvements here.
+  `;
 
 const updatedChangelog = changelogContent.replace(
   /# Changelog/,
