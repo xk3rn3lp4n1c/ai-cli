@@ -1,4 +1,3 @@
-// cli.ts
 import { Command, Input, Select } from "../deps.ts";
 import { chatWithGemini } from "./chatService.ts";
 import { APP_VERSION } from "./constants.ts";
