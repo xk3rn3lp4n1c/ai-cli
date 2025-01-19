@@ -36,6 +36,8 @@ AI-CLI is a command-line interface (CLI) chatbot powered by the **Google Gemini 
 - When you're done, type `exit` to save the chat history and exit the app.
 - Your chat history will be saved in the `chats` directory as a JSON file for future reference.
 
+5. If you want to add system prompt, create a file named `sysprompt.txt` in the root directory of the project and add your system prompt in it.
+
 ---
 
 ## Requirements
