@@ -1,6 +1,8 @@
 {
   "name": "ai-cli",
-  "version": "1.0.1",
-  "replaceVersion": ["README.md"],
+  "version": "1.0.2",
+  "replaceVersion": [
+    "README.md"
+  ],
   "signGitTag": true
 }
