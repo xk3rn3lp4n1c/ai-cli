@@ -35,11 +35,11 @@ async function writeFile(filePath: string, content: string): Promise<void> {
   }
 }
 
-// Step 1: Read version from project.json
+//  Read version from project.json
 const projectContent = await readFile(projectFile);
 const { version } = JSON.parse(projectContent);
 
-// Step 2: Update APP_VERSION in constants.ts
+// Update APP_VERSION in constants.ts
 const constantsContent = await readFile(constantsFile);
 const updatedConstants = constantsContent.replace(
   /export const APP_VERSION = ".*?";/,
@@ -47,7 +47,6 @@ const updatedConstants = constantsContent.replace(
 );
 await writeFile(constantsFile, updatedConstants);
 
-// Step 3: Prompt for changelog details
 console.log(`Preparing changelog entry for version ${version}...`);
 const addedDetails = await promptInput(
   "Enter details of new features (comma-separated)"
@@ -79,7 +78,7 @@ ${addedList || "- No new features listed."}
 ${fixedList || "- No fixes listed."}
 `;
 
-// Step 4: Append the new changelog entry
+// Append the new changelog entry
 const changelogContent = await readFile(changelogFile);
 const updatedChangelog = changelogContent.replace(
   /# Changelog/,
@@ -87,7 +86,6 @@ const updatedChangelog = changelogContent.replace(
 );
 await writeFile(changelogFile, updatedChangelog);
 
-// Final message
 console.log(
   `Version ${version} synchronized in ${constantsFile} and added to ${changelogFile}.`
 );
