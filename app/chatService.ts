@@ -21,7 +21,6 @@ async function readSystemPrompt(): Promise<string> {
   }
 }
 
-// Function to interact with the Gemini API
 export async function chatWithGemini(
   prompt: string,
   history: ChatHistory
