@@ -4,6 +4,11 @@ AI-CLI is a command-line interface (CLI) chatbot powered by the **Google Gemini 
 
 ---
 
+
+https://github.com/user-attachments/assets/f3f837b8-ef6b-4340-be27-05022063f72c
+
+
+
 ## Key Features
 
 - **Chat with AI**: Interact with the Google Gemini API to get responses to your queries.
