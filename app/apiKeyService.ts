@@ -1,4 +1,4 @@
-import { Input, Select } from "./deps.ts";
+import { Input, Select } from "../deps.ts";
 
 export async function ensureApiKey(): Promise<void> {
   const GEMINI_API_KEY = Deno.env.get("AI_CLI_GEMINI_TOKEN");

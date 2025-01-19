@@ -13,7 +13,6 @@ async function ensureChatsDirectory() {
 export async function saveChatHistory(history: ChatHistory): Promise<void> {
   await ensureChatsDirectory(); // Ensure the directory exists
   const fileName = `chats/chat_history_${history.title}.json`;
-  console.log(`Saving chat history to: ${fileName}`); // Debug statement
   await Deno.writeTextFile(fileName, JSON.stringify(history, null, 2));
 }
 

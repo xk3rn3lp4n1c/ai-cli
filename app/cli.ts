@@ -1,5 +1,5 @@
 // cli.ts
-import { Command, Input, Select } from "./deps.ts";
+import { Command, Input, Select } from "../deps.ts";
 import { chatWithGemini } from "./chatService.ts";
 import {
   saveChatHistory,
