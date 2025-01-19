@@ -1,4 +1,5 @@
 import { GEMINI_API_URL } from "./constants.ts";
+import { ChatHistory } from "./interface.ts";
 
 const GEMINI_API_KEY = Deno.env.get("AI_CLI_GEMINI_TOKEN");
 
@@ -8,12 +9,6 @@ if (!GEMINI_API_KEY) {
 }
 
 const GEMINI_API = `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`;
-
-// Interface for chat history
-interface ChatHistory {
-  title: string;
-  chats: { user: string; gemini: string }[];
-}
 
 // Function to interact with the Gemini API
 export async function chatWithGemini(
