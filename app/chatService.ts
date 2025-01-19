@@ -10,12 +10,26 @@ if (!GEMINI_API_KEY) {
 
 const GEMINI_API = `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`;
 
+// Function to read the system prompt from sysprompt.txt
+async function readSystemPrompt(): Promise<string> {
+  try {
+    const sysPrompt = await Deno.readTextFile("sysprompt.txt");
+    return sysPrompt.trim(); // Remove any extra whitespace
+  } catch (error) {
+    console.error("Error reading sysprompt.txt:", error);
+    return ""; // Return an empty string if the file is not found or cannot be read
+  }
+}
+
 // Function to interact with the Gemini API
 export async function chatWithGemini(
   prompt: string,
   history: ChatHistory
 ): Promise<string> {
   try {
+    // Read the system prompt from sysprompt.txt
+    const systemPrompt = await readSystemPrompt();
+
     // Convert chat history into the format expected by Gemini API
     const messages = history.chats
       .map((chat) => [
@@ -23,6 +37,11 @@ export async function chatWithGemini(
         { role: "model", parts: [{ text: chat.gemini }] },
       ])
       .flat();
+
+    // Add the system prompt as the first message (if it exists)
+    if (systemPrompt) {
+      messages.unshift({ role: "model", parts: [{ text: systemPrompt }] });
+    }
 
     // Add the current prompt
     messages.push({ role: "user", parts: [{ text: prompt }] });
