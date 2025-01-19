@@ -22,13 +22,11 @@ export async function ensureApiKey(): Promise<void> {
 
       // Provide instructions to set the API key permanently
       console.log(`
-To set the API key permanently, add the following line to your shell configuration file (e.g., ~/.bashrc, ~/.zshrc, or ~/.profile):
-
-export AI_CLI_GEMINI_TOKEN="${apiKey}"
-
-Then, restart your terminal or run:
-source ~/.bashrc  # or source ~/.zshrc, depending on your shell
-`);
+        To set the API key permanently, add the following line to your shell configuration file (e.g., ~/.bashrc, ~/.zshrc, or ~/.profile):
+        export AI_CLI_GEMINI_TOKEN="${apiKey}"
+        Then, restart your terminal or run:
+        source ~/.bashrc  # or source ~/.zshrc, depending on your shell
+      `);
 
       // Set the API key for the current session
       Deno.env.set("AI_CLI_GEMINI_TOKEN", apiKey);
