@@ -48,19 +48,29 @@ interface ChatHistory {
 }
 
 // Function to interact with the Gemini API
-async function chatWithGemini(prompt: string): Promise<string> {
+async function chatWithGemini(
+  prompt: string,
+  history: ChatHistory
+): Promise<string> {
   try {
+    // Convert chat history into the format expected by Gemini API
+    const messages = history.chats
+      .map((chat) => [
+        { role: "user", parts: [{ text: chat.user }] },
+        { role: "model", parts: [{ text: chat.gemini }] },
+      ])
+      .flat();
+
+    // Add the current prompt
+    messages.push({ role: "user", parts: [{ text: prompt }] });
+
     const response = await fetch(GEMINI_API, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
+        contents: messages,
       }),
     });
 
@@ -89,12 +99,14 @@ async function ensureChatsDirectory() {
 async function saveChatHistory(history: ChatHistory): Promise<void> {
   await ensureChatsDirectory(); // Ensure the directory exists
   const fileName = `chats/chat_history_${history.title}.json`;
+  console.log(`Saving chat history to: ${fileName}`); // Debug statement
   await Deno.writeTextFile(fileName, JSON.stringify(history, null, 2));
 }
 
 // Function to load chat history from a JSON file
 async function loadChatHistory(title: string): Promise<ChatHistory | null> {
   const fileName = `chats/chat_history_${title}.json`;
+  console.log(`Loading chat history from: ${fileName}`); // Debug statement
   try {
     const fileContent = await Deno.readTextFile(fileName);
     return JSON.parse(fileContent) as ChatHistory;
@@ -154,6 +166,7 @@ const cli = new Command()
       const title = await Input.prompt("Enter a title for this chat session:");
       chatHistory = { title, chats: [] };
     } else {
+      // Extract the title from the selected history
       const loadedHistory = await loadChatHistory(selectedHistory);
       if (!loadedHistory) {
         console.log("Failed to load chat history. Starting a new session.");
@@ -177,16 +190,19 @@ const cli = new Command()
         break;
       }
 
-      const response = await chatWithGemini(userInput);
+      const response = await chatWithGemini(userInput, chatHistory);
       console.log(`AI-CLI: ${response}`);
 
       // Add the chat pair to the history
       chatHistory.chats.push({ user: userInput, gemini: response });
 
-      // Save the chat history if it reaches 200 pairs
+      // Save the chat history after each interaction
+      await saveChatHistory(chatHistory);
+
       if (chatHistory.chats.length >= 200) {
-        await saveChatHistory(chatHistory);
-        console.log("Chat history saved. Starting a new session.");
+        console.log(
+          "Chat history reached 200 messages. Starting a new session."
+        );
         const title = await Input.prompt(
           "Enter a title for the new chat session:"
         );
