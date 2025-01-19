@@ -1,6 +1,7 @@
 // cli.ts
 import { Command, Input, Select } from "../deps.ts";
 import { chatWithGemini } from "./chatService.ts";
+import { APP_VERSION } from "./constants.ts";
 import {
   saveChatHistory,
   loadChatHistory,
@@ -10,7 +11,7 @@ import { ChatHistory } from "./interface.ts";
 
 export const cli = new Command()
   .name("ai-cli")
-  .version("1.0.0")
+  .version(APP_VERSION)
   .description("A CLI chatbot powered by Google Gemini API")
   .action(async () => {
     console.log(`
