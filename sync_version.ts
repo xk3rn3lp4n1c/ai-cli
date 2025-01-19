@@ -1,72 +1,61 @@
-const projectFile = "project.json";
-const constantsFile = "app/constants.ts";
-const changelogFile = "CHANGELOG.md";
+// bump.ts
+import { readTextFile, writeTextFile } from "https://deno.land/std/fs/mod.ts";
 
-// Helper function to prompt the user for input
-async function promptInput(message: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
+const constantsFilePath = "app/constants.ts";
 
-  await Deno.stdout.write(encoder.encode(`${message}: `));
-  const buf = new Uint8Array(1024);
-  const n = <number>await Deno.stdin.read(buf);
+async function bumpVersion(type: "patch" | "minor" | "major") {
+  // Read the constants.ts file
+  const constantsFile = await readTextFile(constantsFilePath);
 
-  return decoder.decode(buf.subarray(0, n)).trim();
+  // Extract the current version
+  const versionMatch = constantsFile.match(
+    /export const APP_VERSION = "(\d+\.\d+\.\d+)"/
+  );
+  if (!versionMatch) {
+    throw new Error("APP_VERSION not found in constants.ts");
+  }
+
+  const currentVersion = versionMatch[1];
+  const [major, minor, patch] = currentVersion.split(".").map(Number);
+
+  // Increment the version
+  let newVersion: string;
+  switch (type) {
+    case "patch":
+      newVersion = `${major}.${minor}.${patch + 1}`;
+      break;
+    case "minor":
+      newVersion = `${major}.${minor + 1}.0`;
+      break;
+    case "major":
+      newVersion = `${major + 1}.0.0`;
+      break;
+    default:
+      throw new Error(
+        "Invalid version type. Use 'patch', 'minor', or 'major'."
+      );
+  }
+
+  // Replace the old version with the new version
+  const updatedFile = constantsFile.replace(
+    /export const APP_VERSION = "\d+\.\d+\.\d+"/,
+    `export const APP_VERSION = "${newVersion}"`
+  );
+
+  // Write the updated file
+  await writeTextFile(constantsFilePath, updatedFile);
+
+  console.log(`Version bumped from ${currentVersion} to ${newVersion}`);
 }
 
-// Step 1: Read version from project.json
-const projectContent = await Deno.readTextFile(projectFile);
-const { version } = JSON.parse(projectContent);
+// Get the bump type from command-line arguments
+const type = Deno.args[0];
+if (!["patch", "minor", "major"].includes(type)) {
+  console.error(
+    "Usage: deno run --allow-read --allow-write bump.ts <patch|minor|major>"
+  );
+  Deno.exit(1);
+}
 
-// Step 2: Update APP_VERSION in constants.ts
-const constantsContent = await Deno.readTextFile(constantsFile);
-const updatedConstants = constantsContent.replace(
-  /export const APP_VERSION = ".*?";/,
-  `export const APP_VERSION = "${version}";`
-);
-await Deno.writeTextFile(constantsFile, updatedConstants);
-
-// Step 3: Prompt for changelog details
-console.log(`Preparing changelog entry for version ${version}...`);
-const addedDetails = await promptInput(
-  "Enter details of new features (comma-separated)"
-);
-const fixedDetails = await promptInput(
-  "Enter details of fixes (comma-separated)"
-);
-
-// Format the changelog entry
-const currentDate = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
-const addedList = addedDetails
-  .split(",")
-  .map((item) => `- ${item.trim()}`)
-  .join("\n");
-const fixedList = fixedDetails
-  .split(",")
-  .map((item) => `- ${item.trim()}`)
-  .join("\n");
-
-const newChangelogEntry = `
-## [${version}] - ${currentDate}
-
-### Added
-
-${addedList || "- No new features listed."}
-
-### Fixed
-
-${fixedList || "- No fixes listed."}
-`;
-
-// Step 4: Append the new changelog entry
-const changelogContent = await Deno.readTextFile(changelogFile);
-const updatedChangelog = changelogContent.replace(
-  /# Changelog/,
-  `# Changelog\n${newChangelogEntry.trim()}\n`
-);
-await Deno.writeTextFile(changelogFile, updatedChangelog);
-
-// Final message
-console.log(
-  `Version ${version} synchronized in ${constantsFile} and added to ${changelogFile}.`
-);
+// Bump the version
+bumpVersion(type as "patch" | "minor" | "major");
